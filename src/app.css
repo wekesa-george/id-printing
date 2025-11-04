@@ -3,6 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+  th, td {
+    min-width: 50px;
+    border: 1px solid #e1e1e1;
+    padding: 5px;
+    font-size: 13px;
+  }
+
+  tr.selected {
+    background-color: #e0f7fa;
+  }
+
+  .card td {
+    padding: 1px !important;
+    text-align: left;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  .card-container {
+    width: 5.70375in;
+    height: 3.59125in;
+    position: relative;
+    background-size: 100%;
+    background-repeat: no-repeat;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;

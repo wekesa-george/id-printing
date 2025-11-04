@@ -1,6 +1,7 @@
 <script lang="ts">
 
     import * as XLSX from 'xlsx';
+    import { mount } from 'svelte';
     import CardFront from '../components/CardFront.svelte';
     import CardBack from '../components/CardBack.svelte';
 
@@ -19,7 +20,10 @@
         const reader = new FileReader();
 
         reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
+            if (!e.target) return;
+            const result = e.target.result;
+            if (!result) return;
+            const data = typeof result === 'string' ? new TextEncoder().encode(result) : new Uint8Array(result);
             const workbook = XLSX.read(data, { type: 'array' });
 
             // Assuming the first sheet is the one we want
@@ -55,7 +59,7 @@
             selectedRows = [];
         } else {
             // Select all rows
-            selectedRows = tableData.map((_, index) => index);
+            selectedRows = tableData.map((_: unknown, index: number) => index);
         }
     }
 
@@ -83,10 +87,7 @@
 
             // Render CardFront
             const cardFront = document.createElement('div');
-            new CardFront({
-                target: cardFront,
-                props: { data }
-            });
+            mount(CardFront, { target: cardFront, props: { data } });
             cardSet.appendChild(cardFront);
 
             // Page break after front side
@@ -96,10 +97,7 @@
 
             // Render CardBack
             const cardBack = document.createElement('div');
-            new CardBack({
-                target: cardBack,
-                props: { data }
-            });
+            mount(CardBack, { target: cardBack, props: { data } });
             cardSet.appendChild(cardBack);
 
             // Page break after back side
@@ -116,13 +114,15 @@
         document.body.appendChild(iframe);
 
         // Write the content to the iframe
-        const doc = iframe.contentWindow.document;
+        const cw = iframe.contentWindow;
+        if (!cw) return;
+        const doc = cw.document;
         doc.open();
         doc.write(`
             <html>
                 <head>
                     <title>Print Cards</title>
-                    <style>
+                    <sty` + `le>
                         ${Array.from(document.querySelectorAll('style'))
                             .map(style => style.innerHTML)
                             .join('\n')}
@@ -132,7 +132,7 @@
                                 page-break-after: always;
                             }
                         }
-                    </style>
+                    </sty` + `le>
                 </head>
                 <body>
                     ${printableElement.innerHTML}
@@ -143,6 +143,7 @@
 
         // Wait for the content to load
         iframe.onload = function() {
+            if (!iframe.contentWindow) return;
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
             document.body.removeChild(iframe);
@@ -210,35 +211,4 @@
 </div>
 
 <style>
-    th, td {
-        min-width: 50px;
-        border: 1px solid #e1e1e1;
-        padding: 5px;
-        font-size: 13px;
-    }
-
-    /* Highlight selected rows */
-    tr.selected {
-        background-color: #e0f7fa; /* Light cyan background for selected rows */
-    }
-
-    .card td {
-        padding:1px !important;
-        text-align: left;
-    }
-
-    .page-break {
-        page-break-after: always;
-    }
-
-    /* Styles for CardFront and CardBack */
-    .card-container {
-        width: 5.70375in;
-        height: 3.59125in;
-        position: relative;
-        background-size: 100%;
-        background-repeat: no-repeat;
-    }
-
-    /* Additional styles if needed */
 </style>
